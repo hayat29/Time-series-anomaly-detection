@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Anomaly Detection</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin:54px;
+            padding: 20px;
+            background-color: #392e2e;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 2px 5px rgba(139, 138, 138, 0.1);
+        }
+        h1 {
+            
+            border-radius: 20px;
+            text-align: center;
+            color: #ffffff;
+            background-color: rgb(129 107 107);
+            margin: 72px;
+        }
+        #plot {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Time Series Anomaly Detection</h1>
+        <div id="plot"></div>
+    </div>
+    <script>
+        function fetchData() {
+            // Generate sample data (replace this with your actual data)
+            const data = [];
+            const now = new Date();
+            for (let i = 0; i < 1000; i++) {
+                const timestamp = new Date(now.getTime() - (1000 - i) * 3600000);
+                const value = Math.random() * 10 + 90 + (i / 100);
+                data.push({ timestamp: timestamp.toISOString(), value: value });
+            }
+
+            // Send data to the backend for anomaly detection
+            fetch('/detect_anomalies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: data }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Plot the results
+                const timestamps = result.map(d => d.timestamp);
+                const values = result.map(d => d.value);
+                const anomalies = result.filter(d => d.anomaly === -1);
+
+                const trace1 = {
+                    x: timestamps,
+                    y: values,
+                    mode: 'lines',
+                    name: 'Time Series'
+                };
+
+                const trace2 = {
+                    x: anomalies.map(d => d.timestamp),
+                    y: anomalies.map(d => d.value),
+                    mode: 'markers',
+                    name: 'Anomalies',
+                    marker: { color: 'red', size: 10 }
+                };
+
+                const layout = {
+                    title: 'Time Series with Anomalies',
+                    xaxis: { title: 'Timestamp' },
+                    yaxis: { title: 'Value' }
+                };
+
+                Plotly.newPlot('plot', [trace1, trace2], layout);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Fetch data when the page loads
+        fetchData();
+    </script>
+</body>
+</html>
